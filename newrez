@@ -18,6 +18,10 @@
 # fixed issue where setting to "default" after some other resulution
 # left mouse-area at prior resolution
 
+# v 2.1
+# Fri Nov 6
+# eDP-1 displays now supported
+
 umask 000
 
 # resolution can optionally be specified on command line
@@ -34,19 +38,21 @@ fi
 # find the currently connected devices, make a list
 devices=`xrandr -q | grep connected | grep -v disconnected | cut -d"(" -f1`
 
-# there MUST be a "connected" LVDS1 and a "disconnected" VGA1
+# there MUST be a "connected" LVDS-1 or eDP-1 and a "disconnected" VGA1
 current=`xrandr -q`
 
-if echo "$current" | grep "LVDS1 connected" >/dev/null
-	then	: OK
-	else	zenity --info --title="PROBLEM" --text="Current display must be LVDS1"; exit 0
+if echo "$current" | grep "LVDS-1 connected" >/dev/null
+	then	display=LVDS-1
+	elif	echo "$current" | grep "eDP-1 connected" >/dev/null
+	then	display=eDP-1
+	else	zenity --info --title="PROBLEM" --text="Current display must be LVDS-1 or eDP-1"; exit 0
 fi
-if echo "$current" | grep "VGA1 disconnected" >/dev/null
+if echo "$current" | grep "VGA-1 disconnected" >/dev/null
 	then	: OK
-	else	zenity --info --title="IMPORTANT" --text="The VGA1 display resolution may be affected by this change"
+	else	zenity --info --title="IMPORTANT" --text="The VGA-1 display resolution may be affected by this change"
 fi
 
-default=`echo "$current" | grep -A 1 "^LVDS1" | tail -1 | awk '{print $1}'`
+default=`echo "$current" | grep -A 1 "^$display" | tail -1 | awk '{print $1}'`
 H=`echo $default | cut -d'x' -f1`
 V=`echo $default | cut -d'x' -f2`
 HZ=`echo $default | awk '{print $2}' | tr -d '[*+]'`
@@ -65,10 +71,10 @@ if [ -z "$newrez" ]
 fi
 
 case $newrez in
-	default)	xrandr --output LVDS1 --mode $default --scale 1x1
-			xrandr --addmode VGA1 $default
+	default)	xrandr --output $display --mode $default --scale 1x1
+			xrandr --addmode VGA-1 $default
 			xrandr --newmode $default $newmode
-			xrandr --output VGA1 --mode $default --scale 1x1
+			xrandr --output VGA-1 --mode $default --scale 1x1
 			exit 0 ;;
 esac
 
@@ -87,13 +93,13 @@ fi
 scaleH=`echo -e "scale=10\n$newH / $H\nquit" | bc`
 scaleV=`echo -e "scale=10\n$newV / $V\nquit" | bc`
 
-if echo "$current" | grep -A 100 "^VGA1" | grep $newrez >/dev/null
+if echo "$current" | grep -A 100 "^VGA-1" | grep $newrez >/dev/null
 	then	: already there
 	else	xrandr --newmode "$newrez" $newmode
-		xrandr --addmode VGA1 $newrez
+		xrandr --addmode VGA-1 $newrez
 fi
 
-if xrandr --output VGA1 --mode $newrez --output LVDS1 --fb $newrez --scale $scaleH"x"$scaleV 2>&1 | tee -a /tmp/xrandr.err
+if xrandr --output VGA-1 --mode $newrez --output $display --fb $newrez --scale $scaleH"x"$scaleV 2>&1 | tee -a /tmp/xrandr.err
 	then	: success
 	else	zenity --info --title="Xrandr produced this error" --text="`cat /tmp/xrandr.err`"
 
