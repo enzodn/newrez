@@ -18,6 +18,8 @@
 # fixed issue where setting to "default" after some other resulution
 # left mouse-area at prior resolution
 
+# Enzo Di Nardo, enzodn@protonmail.com
+
 # v 2.1
 # Fri Nov 6
 # eDP-1 displays now supported
