@@ -29,4 +29,4 @@ cvt
 ```
 
 #### Credits
-The original author is
+The original author is Marc Brumlik
